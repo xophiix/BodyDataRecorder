@@ -1,25 +1,23 @@
 package org.xophiix.bodydatarecorder;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 
 import org.xophiix.bodydatarecorder.model.BodyDataRecord;
 import org.xophiix.bodydatarecorder.model.DbHelper;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -65,34 +63,87 @@ public class EditRecordActivity extends Activity implements OnClickListener {
     public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		menu.add(0, 1, 0, "历史记录");
-		menu.add(0, 2, 0, "退 出");	
+		menu.add(0, 2, 0, "退 出");
+		menu.add(0, 3, 0, "关于");
 		return true;
     }
     
+    public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case 1:
+			Intent intent = new Intent();
+			intent.setClass(EditRecordActivity.this, RecordListActivity.class);
+			startActivity(intent);
+			return true;
+		case 2:
+			quitApp();
+			return true;
+		case 3:
+			  new AlertDialog.Builder(this) 
+			    .setTitle("BodyDataRecorder") 
+			    .setMessage("Author:xophiix\n" +
+			    		"Email:xophiix@gmail.com\n" +
+			    		"Blog:http://xophiix.com") 
+			    .show();
+			return true;
+		}
+		
+		return false;
+	}
+    
+	public void quitApp() {
+		new AlertDialog.Builder(EditRecordActivity.this).setTitle("提示").setMessage(
+				"确定退出?").setPositiveButton("确定",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {	
+						DbHelper db = new DbHelper(EditRecordActivity.this);
+						db.close();
+						finish();
+					}
+				}).setNegativeButton("取消",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+					}
+				}).show();
+	}
+	
     public void onClick(View v) {
     	int viewId = v.getId();
     	
 		if (viewId == R.id.save) {
 			BodyDataRecord record = new BodyDataRecord();
-			
+			boolean emptyData = true;
 			String value = ((EditText)findViewById(R.id.EditTextWeight)).getText().toString();
 			if (!value.isEmpty()) {
-				record.weight = Double.parseDouble(value);	
+				record.weight = Double.parseDouble(value);
+				emptyData = false;
 			}
 			
 			value = ((EditText)findViewById(R.id.EditTextBreastSize)).getText().toString();
 			if (!value.isEmpty()) {
-				record.breastSize = Double.parseDouble(value);	
+				record.breastSize = Double.parseDouble(value);
+				emptyData = false;
 			}
 			
 			value = ((EditText)findViewById(R.id.EditTextWaistSize)).getText().toString();
 			if (!value.isEmpty()) {
-				record.waistSize = Double.parseDouble(value);	
+				record.waistSize = Double.parseDouble(value);
+				emptyData = false;
 			}
 			
 			value = ((EditText)findViewById(R.id.EditTextHipSize)).getText().toString();
 			if (!value.isEmpty()) {
 				record.hipSize = Double.parseDouble(value);	
+				emptyData = false;
+			}
+			
+			if (emptyData) {
+				  new AlertDialog.Builder(this) 
+				    .setTitle("Warning") 
+				    .setMessage("没有填写任何数据") 
+				    .show();
+				  
+				  return;
 			}
 			
 			record.lunaria = ((CheckBox)findViewById(R.id.checkBox1)).isChecked();

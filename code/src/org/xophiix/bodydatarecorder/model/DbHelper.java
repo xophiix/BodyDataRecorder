@@ -1,5 +1,7 @@
 package org.xophiix.bodydatarecorder.model;
 
+import java.util.Date;
+
 import org.xophiix.bodydatarecorder.R;
 
 import android.content.Context;
@@ -109,6 +111,10 @@ public class DbHelper {
 	}
 
 	public Cursor getRecordsByDate(int userId, int year, int month, int day) {
+		return m_db.query("records", null, "uid=" + userId, null, null, null, "_id");
+	}
+	
+	public Cursor getRecordsByDateRange(int userId, Date startDate, Date endDate) {
 		return m_db.query("records", null, "uid=" + userId, null, null, null, "_id");
 	}
 

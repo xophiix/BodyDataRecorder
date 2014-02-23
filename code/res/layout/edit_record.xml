@@ -18,7 +18,7 @@
                 android:id="@+id/TextWeight"
                 android:layout_width="98dp"
                 android:layout_height="wrap_content"
-                android:text="体重" />
+                android:text="体重(kg)" />
 
             <EditText
                 android:id="@+id/EditTextWeight"
@@ -37,7 +37,7 @@
                 android:id="@+id/TextBreastSize"
                 android:layout_width="98dp"
                 android:layout_height="wrap_content"
-                android:text="胸围" />
+                android:text="胸围(cm)" />
 
             <EditText
                 android:id="@+id/EditTextBreastSize"
@@ -56,7 +56,7 @@
                 android:id="@+id/Text"
                 android:layout_width="98dp"
                 android:layout_height="wrap_content"
-                android:text="腰围" />
+                android:text="腰围(cm)" />
 
             <EditText
                 android:id="@+id/EditTextWaistSize"
@@ -75,7 +75,7 @@
                 android:id="@+id/TextHip"
                 android:layout_width="98dp"
                 android:layout_height="wrap_content"
-                android:text="臀围" />
+                android:text="臀围(cm)" />
 
             <EditText
                 android:id="@+id/EditTextHipSize"
