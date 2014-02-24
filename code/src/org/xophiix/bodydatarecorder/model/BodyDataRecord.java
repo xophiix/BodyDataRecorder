@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 
 public class BodyDataRecord {
+	public long id;
 	public Calendar timeStamp;
 	public double weight;
 	public double waistSize;

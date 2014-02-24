@@ -7,22 +7,35 @@ import org.xophiix.bodydatarecorder.R;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.TextView;
 
 public class DbHelper {	
 	private static final String LOG_TAG = "BodyDB";
-	private static final String DATABASE_NAME = "body.db";
+	private static final String DATABASE_NAME = "body";
 
-	private static final int DB_VERSION = 0;    
+	private static final int DB_VERSION = 1;    
 
+	private SQLiteOpenHelper m_sqliteHelper;
 	SQLiteDatabase m_db;
 	Context m_context;
 
 	public DbHelper(Context context) {
 		m_context = context;
-		m_db = context.openOrCreateDatabase(DATABASE_NAME, 0, null); 
+		m_sqliteHelper = new SQLiteOpenHelper(context, DATABASE_NAME, null, DB_VERSION) {
+			@Override
+			public void onCreate(SQLiteDatabase db) {
+				createTables(db);			    
+			}
+
+			@Override
+			public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+			}
+		};
+		
+		m_db = m_sqliteHelper.getWritableDatabase(); 
 		Log.v(LOG_TAG,"db path=" + m_db.getPath());
 	}
 
@@ -31,72 +44,53 @@ public class DbHelper {
 	}
 
 	public int getCurrentUser() {
-		return 0;
+		return 1;
 	}
 
 	public void close() {
 		m_db.close();
 	}
 
-	public void createNewDB() {
-		try {
-			String col[] = {"type", "name"};
-			Cursor c = m_db.query("sqlite_master", col, "name='body_record_config'", null, null, null, null);	    	
-			if (c.getCount() == 0) {
-				createTables();
-			}	    	
-		} catch (Exception e) {
-			Log.v(LOG_TAG, e.getMessage());
-		}
-	}
+	void createTables(SQLiteDatabase db) {
+		Log.v(LOG_TAG, "Creating body_record_config Table");
+		db.execSQL("CREATE TABLE body_record_config ("
+				+ "_id INTEGER primary key,"
+				+ "current_user INTEGER default 1,"
+				+ "version INTEGER  default 0"
+				+ ");");
 
-	void createTables() {
-		try {
-			Log.v(LOG_TAG, "Creating body_record_config Table");
-			m_db.execSQL("CREATE TABLE body_record_config ("
-					+ "_id INTEGER primary key,"
-					+ "current_user INTEGER default 1,"
-					+ "version INTEGER  default 0"
-					+ ");");
+		Log.v(LOG_TAG, "Creating records Table");
+		db.execSQL("CREATE TABLE records ("
+				+ "_id INTEGER primary key autoincrement,"
+				+ "uid integer,"
+				+ "weight REAL,"
+				+ "breastSize REAL,"
+				+ "waistSize REAL,"
+				+ "hipSize REAL,"
+				+ "lunaria INTEGER,"
+				+ "timeStamp"				
+				+ ");");                                                                                                                                                                                                                                                                
 
-			Log.v(LOG_TAG, "Creating records Table");
-			m_db.execSQL("CREATE TABLE records ("
-					+ "_id INTEGER primary key autoincrement,"
-					+ "uid integer,"
-					+ "weight REAL,"
-					+ "breastSize REAL,"
-					+ "waistSize REAL,"
-					+ "hipSize REAL,"
-					+ "lunaria INTEGER,"
-					+ "date TEXT,"
-					+ "time TEXT"
-					+ ");");                                                                                                                                                                                                                                                                
+		db.execSQL("CREATE INDEX record_created_at ON records (timeStamp)");
+		
+		Log.v(LOG_TAG, "Creating users Table");
+		db.execSQL("CREATE TABLE users ("
+				+ "_id INTEGER primary key autoincrement,"
+				+ "name TEXT"	                               
+				+ ");");
 
-			Log.v(LOG_TAG, "Creating users Table");
-			m_db.execSQL("CREATE TABLE users ("
-					+ "_id INTEGER primary key autoincrement,"
-					+ "name TEXT"	                               
-					+ ");");
-
-			m_db.execSQL("insert into users values (null,'amy')");	      	       
-		} catch(Exception e) {
-			Log.v(LOG_TAG,"Create Table err" + e.getMessage());
-		}
+		db.execSQL("insert into users values (null,'amy')");	      	       
 	}
 
 	public void addRecord(int userId, BodyDataRecord record) {
-
-		CharSequence dateText = DateFormat.format("yyyy/MM/dd", record.timeStamp);
-		CharSequence timeText = DateFormat.format("kk:mm", record.timeStamp);
-
-		String sql="insert into records values(null,"+userId+","
+		String sql="insert into records values(null,"
+				+ userId+","
 				+ record.weight+","
 				+ record.breastSize+","
 				+ record.waistSize+","
 				+ record.hipSize+","
-				+ (record.lunaria ? 1 : 0) + ",'"
-				+ dateText +"','"
-				+ timeText +"'"
+				+ (record.lunaria ? 1 : 0) + ","
+				+ (record.timeStamp.getTimeInMillis() / 1000)				
 				+")";
 
 		m_db.execSQL(sql);	                
@@ -107,15 +101,17 @@ public class DbHelper {
 	}
 
 	public void deleteRecord(int recordId) {
-
-	}
-
-	public Cursor getRecordsByDate(int userId, int year, int month, int day) {
-		return m_db.query("records", null, "uid=" + userId, null, null, null, "_id");
+		exec("delete from records where _id=?", new Object[]{recordId});
 	}
 	
 	public Cursor getRecordsByDateRange(int userId, Date startDate, Date endDate) {
-		return m_db.query("records", null, "uid=" + userId, null, null, null, "_id");
+		long startTime = startDate.getTime() / 1000;
+		long endTime = endDate.getTime() / 1000;
+		if (endTime < startTime) {
+			endTime = startTime;
+		}
+		
+		return query("select * from records where timeStamp >=" + startTime + " and timeStamp <=" + endTime);
 	}
 
 	public int addUser(String name) {
@@ -130,4 +126,28 @@ public class DbHelper {
 	public boolean changeUser(int userId) {
 		return true;
 	}
+	
+    public void beginTransaction() {
+    	m_db.beginTransaction();
+    }
+
+    public void endTransaction() {
+    	m_db.endTransaction();
+    }
+
+    public void setTransactionSuccessful() {
+    	m_db.setTransactionSuccessful();
+    }
+
+    public void exec(String query) {
+    	m_db.execSQL(query);
+    }
+
+    public void exec(String query, Object[] values) {
+    	m_db.execSQL(query, values);
+    }
+
+    public Cursor query(String query) {
+    	return m_db.rawQuery(query, null);
+    }
 }

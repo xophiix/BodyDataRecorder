@@ -15,10 +15,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         DbHelper db = new DbHelper(this);
-        db.createNewDB();
-        db.close();
+        int userId = db.getCurrentUser();
         
         Intent intent = new Intent(this, EditRecordActivity.class);
+        intent.putExtra("userId", userId);
         startActivity(intent);
         
         finish();
@@ -30,5 +30,4 @@ public class MainActivity extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-    
 }

@@ -27,11 +27,21 @@ import android.widget.TimePicker;
 public class EditRecordActivity extends Activity implements OnClickListener {	
 		
 	Calendar m_date;
+	int m_userId;
+	int m_recordId;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit_record);
+        
+        if (savedInstanceState != null) {
+        	m_userId = savedInstanceState.getInt("userId");
+        	m_recordId = savedInstanceState.getInt("recordId");
+        } else {
+        	m_userId = getIntent().getIntExtra("userId", 1);
+        	m_recordId = getIntent().getIntExtra("recordId", 0);
+        }
         
         int[] buttonIds = {
     		R.id.EditTextWeight,
@@ -72,6 +82,7 @@ public class EditRecordActivity extends Activity implements OnClickListener {
 		switch (item.getItemId()) {
 		case 1:
 			Intent intent = new Intent();
+			intent.putExtra("userId", m_userId);
 			intent.setClass(EditRecordActivity.this, RecordListActivity.class);
 			startActivity(intent);
 			return true;

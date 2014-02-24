@@ -9,7 +9,7 @@
         android:layout_height="wrap_content" >
 
         <TextView
-            android:id="@+id/record_list_header_date"
+            android:id="@+id/record_list_item_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.32"
@@ -23,7 +23,7 @@
             android:text="体重" />
 
         <TextView
-            android:id="@+id/record_list_header_lunaria"
+            android:id="@+id/record_list_item_lunaria"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.32"
